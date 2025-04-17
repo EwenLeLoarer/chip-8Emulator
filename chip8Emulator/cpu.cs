@@ -11,6 +11,7 @@ namespace chip8Emulator
         public const int MEMORYSIZE = 4096;
         public const int STARTADRESS = 512;
 
+
         public byte[] memory = new byte[MEMORYSIZE];
 
         public byte[] V = new byte[16]; // register

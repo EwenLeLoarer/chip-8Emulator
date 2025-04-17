@@ -114,8 +114,9 @@ namespace chip8Emulator
                     }
                 }
             }
-
         }
+
+
 
         public void InterprateOpCode(UInt16 opcode, object sender, PaintEventArgs e)
         {
@@ -138,6 +139,7 @@ namespace chip8Emulator
                     break;
                 case 1: //00E0 : efface l'ecran
                     this.ResetScreen(sender, e);
+                    //this.cpu.pc += 2; // Avancer au prochain opcode
                     break;
                 case 2: //00EE : revient du saut
                      if(this.cpu.nbrJump>0)
@@ -163,66 +165,149 @@ namespace chip8Emulator
 
                     break;
                 case 5: //3XNN saute l'instruction suivante si VX est égal à NN. 
+                    if (cpu.V[b3] == ((b2<<4) + b1))
+                    {
+                        cpu.pc += 2;
+                    }
                     break;
                 case 6: //4XNN saute l'instruction suivante si VX et NN ne sont pas égaux.
+                    if (cpu.V[b3] != ((b2 << 4) + b1))
+                    {
+                        cpu.pc += 2;
+                    }
                     break;
                 case 7:  //5XY0 saute l'instruction suivante si VX et VY sont égaux. 
+                    if (cpu.V[b3] == cpu.V[b2])
+                    {
+                        cpu.pc += 2;
+                    }
                     break;
-                case 8:  //6XNN définit VX à NN. 
+                case 8:  //6XNN définit VX à NN.
+                    this.cpu.V[b3] = (byte)((b2 << 4) + b1);
                     break;
                 case 9: //7XNN ajoute NN à VX. 
+                    this.cpu.V[b3] += (byte)((b2 << 4) + b1);
                     break;
                 case 10: //8XY0 définit VX à la valeur de VY. 
+                    this.cpu.V[b3] = this.cpu.V[b2];
                     break;
                 case 11: //8XY1 définit VX à VX OR VY.
+                    this.cpu.V[b3] = (byte)(this.cpu.V[b3] | this.cpu.V[b2]);
                     break;
-                case 12: //8XY2 définit VX à VX AND VY. 
+                case 12: //8XY2 définit VX à VX AND VY.
+                    this.cpu.V[b3] = (byte)(this.cpu.V[b3] & this.cpu.V[b2]);
                     break;
                 case 13:  //8XY3 définit VX à VX XOR VY. 
+                    this.cpu.V[b3] = (byte)(this.cpu.V[b3] ^ this.cpu.V[b2]);
                     break;
                 case 14: //8XY4 ajoute VY à VX. VF est mis à 1 quand il y a un dépassement de mémoire (carry), et à 0 quand il n'y en pas. 
+                    if ((this.cpu.V[b3] + this.cpu.V[b2]) > 0xFF)
+                    {
+                        this.cpu.V[0xF] = 1; //V[15] 
+                    }
+                    else
+                    {
+                        this.cpu.V[0xF] = 0; //V[15] 
+                    }
+                    this.cpu.V[b3] += this.cpu.V[b2];
                     break;
                 case 15:  //8XY5 VY est soustraite de VX. VF est mis à 0 quand il y a un emprunt, et à 1 quand il n'y a en pas. 
+                    if (this.cpu.V[b3] < this.cpu.V[b2])
+                    {
+                        this.cpu.V[0xF] = 0;
+                    }
+                    else
+                    {
+                        this.cpu.V[0xF] = 1;
+                    }
+                    this.cpu.V[b3] -= this.cpu.V[b2];
                     break;
                 case 16:  //8XY6 décale (shift) VX à droite de 1 bit. VF est fixé à la valeur du bit de poids faible de VX avant le décalage. 
+                    this.cpu.V[0xF] = (byte)(this.cpu.V[b3] & (0x01));
+                    this.cpu.V[b3] = (byte)(this.cpu.V[b3] >> 1);
                     break;
                 case 17: //8XY7 VX = VY - VX. VF est mis à 0 quand il y a un emprunt et à 1 quand il n'y en a pas. 
+                    if ((this.cpu.V[b2] < this.cpu.V[b3]))
+                    {
+                        this.cpu.V[0xF] = 0;//this.cpu.V[15]
+                    }
+                    else
+                    {
+                        this.cpu.V[0xF] = 1;
+                    }
                     break;
                 case 18: //8XYE décale (shift) VX à gauche de 1 bit. VF est fixé à la valeur du bit de poids fort de VX avant le décalage. 
+                    this.cpu.V[0xF] = (byte)(this.cpu.V[b3] & (0x01));
+                    this.cpu.V[b3] = (byte)(this.cpu.V[b3] << 1);
                     break;
                 case 19:  //9XY0 saute l'instruction suivante si VX et VY ne sont pas égaux. 
+                    if(b3 != b2)
+                    {
+                        this.cpu.pc += 2;
+                    }
                     break;
                 case 20: //ANNN affecte NNN à I. 
+                    this.cpu.I = (byte)((b3 << 8) + (b2 << 4) + b1);
                     break;
                 case 21:  //BNNN passe à l'adresse NNN + V0. 
+                    this.cpu.pc = (byte)((b3 << 8) + (b2 << 4) + b1 + this.cpu.V[0]);
                     break;
-                case 22:  //CXNN définit VX à un nombre aléatoire inférieur à NN. 
+                case 22:  //CXNN définit VX à un nombre aléatoire inférieur à NN.
+                    Random rand = new Random();
+                    this.cpu.V[b3] =  (byte)rand.Next(0,((b2 << 4) + b1 + 1));
                     break;
                 case 23: //DXYN dessine un sprite aux coordonnées (VX, VY). 
 
                     DrawScreen(b1, b2, b3);
                     break;
-                case 24: //EX9E saute l'instruction suivante si la clé stockée dans VX est pressée. 
+                case 24: //EX9E saute l'instruction suivante si la clé stockée dans VX est pressée.
+                         //
                     break;
                 case 25:  //EXA1 saute l'instruction suivante si la clé stockée dans VX n'est pas pressée. 
                     break;
                 case 26: //FX07 définit VX à la valeur de la temporisation. 
+                    this.cpu.V[b3] = (byte)this.cpu.counterGame;
                     break;
                 case 27: //FX0A attend l'appui sur une touche et la stocke ensuite dans VX. 
                     break;
                 case 28:  //FX15 définit la temporisation à VX. 
+                    this.cpu.counterGame = this.cpu.V[b3];
                     break;
                 case 29: //FX18 définit la minuterie sonore à VX. 
+                    this.cpu.counterSound = this.cpu.V[b3];
                     break;
-                case 30: //FX1E ajoute à VX I. VF est mis à 1 quand il y a overflow (I+VX>0xFFF), et à 0 si tel n'est pas le cas. 
+                case 30: //FX1E ajoute à VX I. VF est mis à 1 quand il y a overflow (I+VX>0xFFF), et à 0 si tel n'est pas le cas.
+                    if ((this.cpu.I + this.cpu.V[b3]) > 0xFFF)
+                    {
+                        this.cpu.V[0xF] = 1;
+                    }
+                    else
+                    {
+                        this.cpu.V[0xF] = 0;
+                    }
+                    this.cpu.I += this.cpu.V[b3];
                     break;
                 case 31: //FX29 définit I à l'emplacement du caractère stocké dans VX. Les caractères 0-F (en hexadécimal) sont représentés par une police 4x5. 
+                    this.cpu.I = (byte)(cpu.V[b3] * 5);
                     break;
                 case 32: //FX33 stocke dans la mémoire le code décimal représentant VX (dans I, I+1, I+2). 
+                    this.cpu.memory[cpu.I] = (byte)((this.cpu.V[b3] - this.cpu.V[b3] % 100) / 100); //stocke les centaines 
+                    this.cpu.memory[cpu.I + 1] = (byte)(((cpu.V[b3] - cpu.V[b3] % 10) / 10) % 10);//les dizaines 
+                    this.cpu.memory[cpu.I + 2] = (byte)(cpu.V[b3] - this.cpu.memory[cpu.I] * 100 - this.cpu.memory[cpu.I + 1] * 10);//les unités
                     break;
-                case 33: //FX55 stocke V0 à VX en mémoire à partir de l'adresse I. 
+                case 33: //FX55 stocke V0 à VX en mémoire à partir de l'adresse I.
+                    for (byte i = 0; i <= b3; i++)
+                    {
+                        this.cpu.memory[cpu.I + i] = cpu.V[i];
+                    }
                     break;
                 case 34: //FX65 remplit V0 à VX avec les valeurs de la mémoire à partir de l'adresse I. 
+
+
+                    for (byte i = 0; i <= b3; i++)
+                    {
+                        cpu.V[i] = this.cpu.memory[cpu.I + i];
+                    }
                     break;
                 default:
                     break;
