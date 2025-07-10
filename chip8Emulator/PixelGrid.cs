@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -70,7 +71,7 @@ namespace chip8Emulator
             ScreenCpu.V[0xF] = 0;
             for (k = 0; k < b1; k++)
             {
-                codage = ScreenCpu.memory[ScreenCpu.I + k + 512]; //on récupère le codage de la ligne à dessiner 
+                codage = ScreenCpu.memory[ScreenCpu.I + k]; //on récupère le codage de la ligne à dessiner 
 
                 y = (byte)((ScreenCpu.V[b2] + k) % L); //on calcule l'ordonnée de la ligne à dessiner, on ne doit pas dépasser L 
 
@@ -226,10 +227,10 @@ namespace chip8Emulator
                     }
                     break;
                 case 20: //ANNN affecte NNN à I. 
-                    cpuObject.I = (byte)((b3 << 8) + (b2 << 4) + b1);
+                    cpuObject.I = (UInt16)((b3 << 8) + (b2 << 4) + b1);
                     break;
                 case 21:  //BNNN passe à l'adresse NNN + V0. 
-                    cpuObject.pc = (byte)((b3 << 8) + (b2 << 4) + b1 + cpuObject.V[0]);
+                    cpuObject.pc = (UInt16)((b3 << 8) + (b2 << 4) + b1 + cpuObject.V[0]);
                     break;
                 case 22:  //CXNN définit VX à un nombre aléatoire inférieur à NN.
                     Random rand = new Random();
@@ -267,7 +268,7 @@ namespace chip8Emulator
                     cpuObject.I += cpuObject.V[b3];
                     break;
                 case 31: //FX29 définit I à l'emplacement du caractère stocké dans VX. Les caractères 0-F (en hexadécimal) sont représentés par une police 4x5. 
-                    cpuObject.I = (byte)(cpuObject.V[b3] * 5);
+                    cpuObject.I = (UInt16)(cpuObject.V[b3] * 5);
                     break;
                 case 32: //FX33 stocke dans la mémoire le code décimal représentant VX (dans I, I+1, I+2). 
                     cpuObject.memory[cpuObject.I] = (byte)((cpuObject.V[b3] - cpuObject.V[b3] % 100) / 100); //stocke les centaines 

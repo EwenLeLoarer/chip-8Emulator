@@ -15,7 +15,7 @@ namespace chip8Emulator
         public byte[] memory = new byte[MEMORYSIZE];
 
         public byte[] V = new byte[16]; // register
-        public UInt16 I; // save a memory adress or draw adress
+        public UInt16 I = 0x200; // save a memory adress or draw adress
         public Jump jp = new Jump();
         public UInt16[] jump = new UInt16[16]; // to handle jump in memory, 16 at max
         public byte nbrJump; // save the number of jump done to not go over 16

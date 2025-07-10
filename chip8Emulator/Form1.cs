@@ -87,7 +87,7 @@ namespace chip8Emulator
                 if (this.IsHandleCreated) // ✅ Ensure the window handle exists
                 {
                     byte start = 0, continuer = 1, compteur = 0;
-                    start = LoadGame("testIBM.ch8");
+                    start = LoadGame("testlogo.ch8");
                     if (start == 1)
                     {
                         do
