@@ -19,6 +19,7 @@ namespace chip8Emulator
         public bool isRunning = true;
         public static int VITESSECPU = 4;
         public static int FPS = 16;
+        public static int SCALE = 8;
         cpu cpu = new cpu();
         public Form1()
         {
@@ -85,8 +86,36 @@ namespace chip8Emulator
             {
                 if (this.IsHandleCreated) // ✅ Ensure the window handle exists
                 {
+                    byte start = 0, continuer = 1, compteur = 0;
+                    start = LoadGame("testIBM.ch8");
+                    if (start == 1)
+                    {
+                        do
+                        {
+                            continuer = 1; //afin de pouvoir quitter l'émulateur 
+
+                            for (compteur = 0; compteur < VITESSECPU; compteur++)
+                            {
+                                this.screen.InterprateOpCode(this.cpu.getOpCode(), this.cpu);
+                                if (this.screen.NeedToBeUpdated)
+                                {
+                                    this.Invalidate();
+                                    this.screen.NeedToBeUpdated = false;
+                                }
+
+                                this.cpu.pc += 2;
+                            }
+
+                            //screen.UpdateScreen();
+                            this.cpu.decompter();
+                            Thread.Sleep(16);
+
+                        } while (continuer == 1);
+                    }
                     this.BeginInvoke((MethodInvoker)(() => this.Invalidate()));
                 }
+
+                Console.WriteLine("resetDisplay");
                 Thread.Sleep(frameDelay);
             }
         }
@@ -99,26 +128,21 @@ namespace chip8Emulator
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
-            byte start = 0, continuer = 1, compteur = 0;
-            start = LoadGame("test.ch8");
-            if (start == 1)
+            
+            for (int y = 0; y < 32; y++)
             {
-                do
+                for (int x = 0; x < 64; x++)
                 {
-                    continuer = 1; //afin de pouvoir quitter l'émulateur 
-
-                    for (compteur = 0; compteur < VITESSECPU; compteur++)
+                    if (screen.screen[x, y] == 1)
                     {
-                        screen.InterprateOpCode(this.cpu.getOpCode(), sender, e);
+                        e.Graphics.FillRectangle(Brushes.White, x * SCALE, y * SCALE, SCALE, SCALE);
                     }
-
-                    screen.UpdateScreen(sender, e);
-                    this.cpu.decompter();
-                    Thread.Sleep(16);
-
-                } while (continuer == 1);
+                    else
+                    {
+                        e.Graphics.FillRectangle(Brushes.Black, x * SCALE, y * SCALE, SCALE, SCALE);
+                    }
+                }
             }
-            screen.UpdateScreen(sender, e);
             
         }
     }

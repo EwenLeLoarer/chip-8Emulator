@@ -101,7 +101,7 @@ namespace chip8Emulator
         public byte getAction(UInt16 opcode)
         {
             byte action;
-            UInt16 resultat;
+            UInt16 resultat = 0;
 
             for (action = 0; action < Jump.nbrOPcode ; action++)
             {
@@ -110,7 +110,8 @@ namespace chip8Emulator
                 if (resultat == jp.id[action]) /* On a trouvé l'action à effectuer */
                     break; /* Plus la peine de continuer la boucle car la condition n'est vraie qu'une seule fois*/
             }
-            Console.WriteLine(action);
+            
+            Console.WriteLine(resultat);
             return action;  //on renvoie l'indice de l'action à effectuer 
         }
     }

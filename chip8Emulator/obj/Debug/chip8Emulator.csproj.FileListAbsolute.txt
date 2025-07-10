@@ -20,3 +20,13 @@ C:\Users\ewenl\Documents\GitHub\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emul
 C:\Users\ewenl\Documents\GitHub\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.csproj.CoreCompileInputs.cache
 C:\Users\ewenl\Documents\GitHub\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.exe
 C:\Users\ewenl\Documents\GitHub\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.pdb
+C:\chip8\chip-8Emulator\chip8Emulator\bin\Debug\chip8Emulator.exe.config
+C:\chip8\chip-8Emulator\chip8Emulator\bin\Debug\chip8Emulator.exe
+C:\chip8\chip-8Emulator\chip8Emulator\bin\Debug\chip8Emulator.pdb
+C:\chip8\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.csproj.AssemblyReference.cache
+C:\chip8\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.Form1.resources
+C:\chip8\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.Properties.Resources.resources
+C:\chip8\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.csproj.GenerateResource.cache
+C:\chip8\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.csproj.CoreCompileInputs.cache
+C:\chip8\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.exe
+C:\chip8\chip-8Emulator\chip8Emulator\obj\Debug\chip8Emulator.pdb
