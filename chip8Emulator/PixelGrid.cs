@@ -11,9 +11,6 @@ namespace chip8Emulator
 {
     public class PixelGrid
     {
-        public const byte BLACK = 0;
-        public const byte WHITE = 1;
-
         public const int l = 64; //number of pixel on x axis
         public const int L = 32; // number of pixel y axis
         public const int DIMPIXEL = 8; // size of a pixel
@@ -73,11 +70,11 @@ namespace chip8Emulator
             ScreenCpu.V[0xF] = 0;
             for (k = 0; k < b1; k++)
             {
-                codage = ScreenCpu.memory[ScreenCpu.I + k]; //on récupère le codage de la ligne à dessiner 
+                codage = ScreenCpu.memory[ScreenCpu.I + k + 512]; //on récupère le codage de la ligne à dessiner 
 
                 y = (byte)((ScreenCpu.V[b2] + k) % L); //on calcule l'ordonnée de la ligne à dessiner, on ne doit pas dépasser L 
 
-                for (j = 0; j < y; j++)
+                for (j = 0, decalage = 7; j < 8; j++, decalage--)
                 {
                     x = (byte)((ScreenCpu.V[b3] + j) % l); //on calcule l'abscisse, on ne doit pas dépasser l 
                     if (((codage)& (0x1<<decalage))!=0) //on récupère le bit correspondant 

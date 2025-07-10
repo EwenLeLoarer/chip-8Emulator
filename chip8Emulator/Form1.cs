@@ -27,7 +27,7 @@ namespace chip8Emulator
 
             InitializeComponent();
 
-            screen.InitializePixel();
+            //screen.InitializePixel();
             this.cpu.CPUInitialize();
             this.cpu.InitializeJump();
             this.cpu.getAction(0x8475);
