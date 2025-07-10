@@ -96,6 +96,24 @@ namespace chip8Emulator
             }
         }
 
+        public void WaitForInputs(byte b3, cpu  ScreenCpu)
+        {
+            bool wait = true;
+            while (wait)
+            {
+                for (byte i = 0; i < 16; i++)
+                {
+                    if (ScreenCpu.keys[i])
+                    {
+                        ScreenCpu.V[b3] = i;
+                        wait = false;
+                        ScreenCpu.pc += 2;
+                    }
+                }
+            }
+            
+        }
+
 
 
         public void InterprateOpCode(UInt16 opcode, cpu cpuObject)
@@ -241,14 +259,22 @@ namespace chip8Emulator
                     DrawScreen(b1, b2, b3, cpuObject);
                     break;
                 case 24: //EX9E saute l'instruction suivante si la clé stockée dans VX est pressée.
-                         //
+                    if (cpuObject.keys[cpuObject.V[b3]])
+                    {
+                        cpuObject.pc += 2;
+                    }
                     break;
                 case 25:  //EXA1 saute l'instruction suivante si la clé stockée dans VX n'est pas pressée. 
+                    if (!cpuObject.keys[cpuObject.V[b3]])
+                    {
+                        cpuObject.pc += 2;
+                    }
                     break;
                 case 26: //FX07 définit VX à la valeur de la temporisation. 
                     cpuObject.V[b3] = (byte)cpuObject.counterGame;
                     break;
                 case 27: //FX0A attend l'appui sur une touche et la stocke ensuite dans VX. 
+                    WaitForInputs(b3, cpuObject);
                     break;
                 case 28:  //FX15 définit la temporisation à VX. 
                     cpuObject.counterGame = cpuObject.V[b3];

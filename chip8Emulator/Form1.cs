@@ -27,6 +27,11 @@ namespace chip8Emulator
 
             InitializeComponent();
 
+            this.KeyDown += Form1_KeyDown;
+            this.KeyUp += Form1_KeyUp;
+            this.KeyPreview = true; 
+            
+
             //screen.InitializePixel();
             this.cpu.CPUInitialize();
             this.cpu.InitializeJump();
@@ -87,7 +92,7 @@ namespace chip8Emulator
                 if (this.IsHandleCreated) // ✅ Ensure the window handle exists
                 {
                     byte start = 0, continuer = 1, compteur = 0;
-                    start = LoadGame("testlogo.ch8");
+                    start = LoadGame("breakout.rom");
                     if (start == 1)
                     {
                         do
@@ -144,6 +149,61 @@ namespace chip8Emulator
                 }
             }
             
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.D1: this.cpu.keys[0x1] = true; break;
+                case Keys.D2: this.cpu.keys[0x2] = true; break;
+                case Keys.D3: this.cpu.keys[0x3] = true; break;
+                case Keys.D4: this.cpu.keys[0xC] = true; break;
+                
+                case Keys.A: this.cpu.keys[0x4] = true; break;
+                case Keys.Z: this.cpu.keys[0x5] = true; break;
+                case Keys.E: this.cpu.keys[0x6] = true; break;
+                case Keys.R: this.cpu.keys[0xD] = true; break;
+                
+                case Keys.Q: this.cpu.keys[0x7] = true; break;
+                case Keys.S: this.cpu.keys[0x8] = true; break;
+                case Keys.D: this.cpu.keys[0x9] = true; break;
+                case Keys.G: this.cpu.keys[0xE] = true; break;
+                
+                case Keys.W: this.cpu.keys[0xA] = true; break;
+                case Keys.X: this.cpu.keys[0xB] = true; break;
+                case Keys.C: this.cpu.keys[0xD] = true; break;
+                case Keys.V: this.cpu.keys[0xF] = true; break;
+                
+                default: break;
+                    
+            }
+        }
+        
+        private void Form1_KeyUp(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.D1: this.cpu.keys[0x1] = false; break;
+                case Keys.D2: this.cpu.keys[0x2] = false; break;
+                case Keys.D3: this.cpu.keys[0x3] = false; break;
+                case Keys.D4: this.cpu.keys[0xC] = false; break;
+                
+                case Keys.A: this.cpu.keys[0x4] = false; break;
+                case Keys.Z: this.cpu.keys[0x5] = false; break;
+                case Keys.E: this.cpu.keys[0x6] = false; break;
+                case Keys.R: this.cpu.keys[0xD] = false; break;
+                
+                case Keys.Q: this.cpu.keys[0x7] = false; break;
+                case Keys.S: this.cpu.keys[0x8] = false; break;
+                case Keys.D: this.cpu.keys[0x9] = false; break;
+                case Keys.G: this.cpu.keys[0xE] = false; break;
+                
+                case Keys.W: this.cpu.keys[0xA] = false; break;
+                case Keys.X: this.cpu.keys[0xB] = false; break;
+                case Keys.C: this.cpu.keys[0xD] = false; break;
+                case Keys.V: this.cpu.keys[0xF] = false; break;
+            }
         }
     }
 }

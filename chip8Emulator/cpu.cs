@@ -22,6 +22,7 @@ namespace chip8Emulator
         public byte counterGame; // counter for the syncronisation
         public byte counterSound; // counter for sound
         public UInt16 pc; // to go throught the array "memory"
+        public bool[] keys = new bool[16];
 
         public void CPUInitialize()
         {
