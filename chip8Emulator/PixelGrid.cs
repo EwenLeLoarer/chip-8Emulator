@@ -88,6 +88,7 @@ namespace chip8Emulator
                         else
                         {
                             screen[x, y] = 1;
+                            //test
                         }
                     }
                 }
