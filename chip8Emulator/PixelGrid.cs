@@ -99,27 +99,33 @@ namespace chip8Emulator
 
         public void WaitForInputs(byte b3, cpu  ScreenCpu)
         {
-            ScreenCpu.isWaitingForKeys = true;
-            while (ScreenCpu.isWaitingForKeys)
+            //ScreenCpu.isWaitingForKeys = true;
+            //while (ScreenCpu.isWaitingForKeys)
+            //{
+            //    for (byte i = 0; i < 16; i++)
+            //    {
+            //        if (ScreenCpu.keys[i])
+            //        {
+            //            ScreenCpu.V[b3] = i;
+            //            Console.WriteLine("input : " + ScreenCpu.V[b3]);
+
+            //            ScreenCpu.isWaitingForKeys = false;
+            //            ScreenCpu.pc += 2;
+
+            //        }
+            //    }
+            //}
+            //bool wait = true;
+
+
+
+            //if (wait) ScreenCpu.pc -= 2;
+
+            if (!ScreenCpu.isWaitingForKeys)
             {
-                for (byte i = 0; i < 16; i++)
-                {
-                    if (ScreenCpu.keys[i])
-                    {
-                        ScreenCpu.V[b3] = i;
-                        Console.WriteLine("input : " + ScreenCpu.V[b3]);
-                       
-                        ScreenCpu.isWaitingForKeys = false;
-                        ScreenCpu.pc += 2;
+                ScreenCpu.isWaitingForKeys = true;
 
-                    }
-                }
             }
-            bool wait = true;
-
-                
-
-            if (wait) ScreenCpu.pc -= 2;
             
             
         }
@@ -333,7 +339,8 @@ namespace chip8Emulator
                 default:
                     break;
             }
-            cpuObject.pc += 2; //on passe au prochain opcode
+            if(!cpuObject.isWaitingForKeys)
+                cpuObject.pc += 2; //on passe au prochain opcode
         }
     }
 }

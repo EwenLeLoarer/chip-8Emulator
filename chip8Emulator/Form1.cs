@@ -98,7 +98,7 @@ namespace chip8Emulator
 
                 // Si opcode Fx0A, gestion d'attente clavier déjà intégrée dans InterprateOpCode()
                 if (cpu.isWaitingForKeys)
-                    break; // Ne pas exécuter trop d’opcodes pendant l’attente
+                    break;
 
                 ushort opcode = cpu.getOpCode();
                 screen.InterprateOpCode(opcode, cpu);
@@ -137,42 +137,36 @@ namespace chip8Emulator
             const int targetFrameRate = 60;
             const int frameDelay = 250;
 
+
+                
+
+            byte start = 0, compteur = 0;
+            start = LoadGame("6-keypad.ch8");
+
+            if(start != 1)
+            {
+                Console.WriteLine("error launching the game :(");
+                return;
+            }
             while (isRunning)
             {
-                if (this.IsHandleCreated) // ✅ Ensure the window handle exists
+                for (compteur = 0; compteur < VITESSECPU; compteur++)
                 {
-                    byte start = 0, continuer = 1, compteur = 0;
-                    start = LoadGame("6-keypad.ch8");
-                    if (start == 1)
+                    if (!this.cpu.isWaitingForKeys)
                     {
-                        do
+                        this.screen.InterprateOpCode(this.cpu.getOpCode(), this.cpu);
+                        if (this.screen.NeedToBeUpdated)
                         {
-                            continuer = 1; //afin de pouvoir quitter l'émulateur 
-
-                            for (compteur = 0; compteur < VITESSECPU; compteur++)
-                            {
-                                this.screen.InterprateOpCode(this.cpu.getOpCode(), this.cpu);
-                                if (this.screen.NeedToBeUpdated)
-                                {
-                                    this.Invalidate();
-                                    this.screen.NeedToBeUpdated = false;
-                                }
-
-                                //this.cpu.pc += 2;
-                            }
-
-                            //screen.UpdateScreen();
-                            this.cpu.decompter();
-                            Thread.Sleep(16);
-
-                        } while (continuer == 1);
+                            this.Invalidate();
+                            this.screen.NeedToBeUpdated = false;
+                        }
                     }
-                    this.BeginInvoke((MethodInvoker)(() => this.Invalidate()));
+
                 }
 
-                Console.WriteLine("resetDisplay");
-                Thread.Sleep(frameDelay);
-            }
+                this.cpu.decompter();
+                Thread.Sleep(16);
+            }              
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -226,7 +220,12 @@ namespace chip8Emulator
                     case Keys.V: this.cpu.keys[0xF] = true; break;
                 
                     default: break;
-                    
+                }
+
+                if(this.cpu.isWaitingForKeys)
+                {
+                    this.cpu.isWaitingForKeys = false;
+                    this.cpu.pc += 2;
                 }
             }
         
