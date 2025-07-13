@@ -57,7 +57,7 @@ namespace chip8Emulator
         }
         private void Start()
         {
-            if (LoadGame("6-keypad.ch8") == 0)
+            if (LoadGame("7-beep.ch8") == 0)
             {
                 Console.WriteLine("Failed to load ROM.");
                 return;
@@ -141,7 +141,7 @@ namespace chip8Emulator
                 
 
             byte start = 0, compteur = 0;
-            start = LoadGame("6-keypad.ch8");
+            start = LoadGame("7-beep.ch8");
 
             if(start != 1)
             {
@@ -162,6 +162,11 @@ namespace chip8Emulator
                         }
                     }
 
+                }
+
+                while (cpu.counterSound != 0)
+                {
+                    Console.Beep();
                 }
 
                 this.cpu.decompter();
