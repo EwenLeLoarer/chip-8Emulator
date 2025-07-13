@@ -99,19 +99,28 @@ namespace chip8Emulator
 
         public void WaitForInputs(byte b3, cpu  ScreenCpu)
         {
-            bool wait = true;
-            while (wait)
+            ScreenCpu.isWaitingForKeys = true;
+            while (ScreenCpu.isWaitingForKeys)
             {
                 for (byte i = 0; i < 16; i++)
                 {
                     if (ScreenCpu.keys[i])
                     {
                         ScreenCpu.V[b3] = i;
-                        wait = false;
+                        Console.WriteLine("input : " + ScreenCpu.V[b3]);
+                       
+                        ScreenCpu.isWaitingForKeys = false;
                         ScreenCpu.pc += 2;
+
                     }
                 }
             }
+            bool wait = true;
+
+                
+
+            if (wait) ScreenCpu.pc -= 2;
+            
             
         }
 
@@ -234,13 +243,14 @@ namespace chip8Emulator
                     {
                         cpuObject.V[0xF] = 1;
                     }
+                    cpuObject.V[b3] = (byte)(cpuObject.V[b2] - cpuObject.V[b3]);
                     break;
                 case 18: //8XYE décale (shift) VX à gauche de 1 bit. VF est fixé à la valeur du bit de poids fort de VX avant le décalage. 
                     cpuObject.V[0xF] = (byte)(cpuObject.V[b3] & (0x01));
                     cpuObject.V[b3] = (byte)(cpuObject.V[b3] << 1);
                     break;
                 case 19:  //9XY0 saute l'instruction suivante si VX et VY ne sont pas égaux. 
-                    if(b3 != b2)
+                    if (cpuObject.V[b3] != cpuObject.V[b2])
                     {
                         cpuObject.pc += 2;
                     }
@@ -260,12 +270,16 @@ namespace chip8Emulator
                     DrawScreen(b1, b2, b3, cpuObject);
                     break;
                 case 24: //EX9E saute l'instruction suivante si la clé stockée dans VX est pressée.
+                    Console.WriteLine("Opcode: EX9E, "+  cpuObject.V[ b3] + " --- " + cpuObject.keys[cpuObject.V[b3]] + "------" + (cpuObject.keys[cpuObject.V[b3]] == true));
                     if (cpuObject.keys[cpuObject.V[b3]])
                     {
                         cpuObject.pc += 2;
                     }
+                    
+
                     break;
                 case 25:  //EXA1 saute l'instruction suivante si la clé stockée dans VX n'est pas pressée. 
+                    Console.WriteLine("Opcode: EXA1, " + cpuObject.V[b3] + " --- " + cpuObject.keys[cpuObject.V[b3]]);
                     if (!cpuObject.keys[cpuObject.V[b3]])
                     {
                         cpuObject.pc += 2;
@@ -319,7 +333,7 @@ namespace chip8Emulator
                 default:
                     break;
             }
-            //cpu.pc += 2; //on passe au prochain opcode
+            cpuObject.pc += 2; //on passe au prochain opcode
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -35,7 +36,6 @@ namespace chip8Emulator
             //screen.InitializePixel();
             this.cpu.CPUInitialize();
             this.cpu.InitializeJump();
-            this.cpu.getAction(0x8475);
 
 
             Thread gameLoop = new Thread(RunGameLoop)
@@ -54,6 +54,56 @@ namespace chip8Emulator
         public void pause()
         {
 
+        }
+        private void Start()
+        {
+            if (LoadGame("6-keypad.ch8") == 0)
+            {
+                Console.WriteLine("Failed to load ROM.");
+                return;
+            }
+
+            Task.Run(() => GameLoop());
+        }
+
+        private void GameLoop()
+        {
+            const int targetFps = 60;
+            const int frameTime = 1000 / targetFps;
+
+            var stopwatch = new Stopwatch();
+
+            while (isRunning)
+            {
+                stopwatch.Restart();
+                ExecuteCpuCycles();
+                cpu.decompter();
+
+                if (screen.NeedToBeUpdated)
+                {
+                    screen.NeedToBeUpdated = false;
+                    BeginInvoke((MethodInvoker)(() => Invalidate()));
+                }
+
+                int elapsed = (int)stopwatch.ElapsedMilliseconds;
+                int delay = Math.Max(0, frameTime - elapsed);
+                Thread.Sleep(delay);
+            }
+        }
+
+        private void ExecuteCpuCycles()
+        {
+            for (int i = 0; i < VITESSECPU; i++)
+            {
+
+                // Si opcode Fx0A, gestion d'attente clavier déjà intégrée dans InterprateOpCode()
+                if (cpu.isWaitingForKeys)
+                    break; // Ne pas exécuter trop d’opcodes pendant l’attente
+
+                ushort opcode = cpu.getOpCode();
+                screen.InterprateOpCode(opcode, cpu);
+
+            }
         }
 
         public byte LoadGame(string nomJeu)
@@ -92,7 +142,7 @@ namespace chip8Emulator
                 if (this.IsHandleCreated) // ✅ Ensure the window handle exists
                 {
                     byte start = 0, continuer = 1, compteur = 0;
-                    start = LoadGame("breakout.rom");
+                    start = LoadGame("6-keypad.ch8");
                     if (start == 1)
                     {
                         do
@@ -108,7 +158,7 @@ namespace chip8Emulator
                                     this.screen.NeedToBeUpdated = false;
                                 }
 
-                                this.cpu.pc += 2;
+                                //this.cpu.pc += 2;
                             }
 
                             //screen.UpdateScreen();
@@ -151,59 +201,59 @@ namespace chip8Emulator
             
         }
 
-        private void Form1_KeyDown(object sender, KeyEventArgs e)
-        {
-            switch (e.KeyCode)
+            private void Form1_KeyDown(object sender, KeyEventArgs e)
             {
-                case Keys.D1: this.cpu.keys[0x1] = true; break;
-                case Keys.D2: this.cpu.keys[0x2] = true; break;
-                case Keys.D3: this.cpu.keys[0x3] = true; break;
-                case Keys.D4: this.cpu.keys[0xC] = true; break;
+                switch (e.KeyCode)
+                {
+                    case Keys.D1: this.cpu.keys[0x1] = true; break;
+                    case Keys.D2: this.cpu.keys[0x2] = true; break;
+                    case Keys.D3: this.cpu.keys[0x3] = true; break;
+                    case Keys.D4: this.cpu.keys[0xC] = true; break;
                 
-                case Keys.A: this.cpu.keys[0x4] = true; break;
-                case Keys.Z: this.cpu.keys[0x5] = true; break;
-                case Keys.E: this.cpu.keys[0x6] = true; break;
-                case Keys.R: this.cpu.keys[0xD] = true; break;
+                    case Keys.A: this.cpu.keys[0x4] = true; break;
+                    case Keys.Z: this.cpu.keys[0x5] = true; break;
+                    case Keys.E: this.cpu.keys[0x6] = true; break;
+                    case Keys.R: this.cpu.keys[0xD] = true; break;
                 
-                case Keys.Q: this.cpu.keys[0x7] = true; break;
-                case Keys.S: this.cpu.keys[0x8] = true; break;
-                case Keys.D: this.cpu.keys[0x9] = true; break;
-                case Keys.G: this.cpu.keys[0xE] = true; break;
+                    case Keys.Q: this.cpu.keys[0x7] = true; break;
+                    case Keys.S: this.cpu.keys[0x8] = true; break;
+                    case Keys.D: this.cpu.keys[0x9] = true; break;
+                    case Keys.F: this.cpu.keys[0xE] = true; break;
                 
-                case Keys.W: this.cpu.keys[0xA] = true; break;
-                case Keys.X: this.cpu.keys[0xB] = true; break;
-                case Keys.C: this.cpu.keys[0xD] = true; break;
-                case Keys.V: this.cpu.keys[0xF] = true; break;
+                    case Keys.W: this.cpu.keys[0xA] = true; break;
+                    case Keys.X: this.cpu.keys[0x0] = true; break;
+                    case Keys.C: this.cpu.keys[0xB] = true; break;
+                    case Keys.V: this.cpu.keys[0xF] = true; break;
                 
-                default: break;
+                    default: break;
                     
+                }
             }
-        }
         
-        private void Form1_KeyUp(object sender, KeyEventArgs e)
-        {
-            switch (e.KeyCode)
+            private void Form1_KeyUp(object sender, KeyEventArgs e)
             {
-                case Keys.D1: this.cpu.keys[0x1] = false; break;
-                case Keys.D2: this.cpu.keys[0x2] = false; break;
-                case Keys.D3: this.cpu.keys[0x3] = false; break;
-                case Keys.D4: this.cpu.keys[0xC] = false; break;
+                switch (e.KeyCode)
+                {
+                    case Keys.D1: this.cpu.keys[0x1] = false; break;
+                    case Keys.D2: this.cpu.keys[0x2] = false; break;
+                    case Keys.D3: this.cpu.keys[0x3] = false; break;
+                    case Keys.D4: this.cpu.keys[0xC] = false; break;
                 
-                case Keys.A: this.cpu.keys[0x4] = false; break;
-                case Keys.Z: this.cpu.keys[0x5] = false; break;
-                case Keys.E: this.cpu.keys[0x6] = false; break;
-                case Keys.R: this.cpu.keys[0xD] = false; break;
+                    case Keys.A: this.cpu.keys[0x4] = false; break;
+                    case Keys.Z: this.cpu.keys[0x5] = false; break;
+                    case Keys.E: this.cpu.keys[0x6] = false; break;
+                    case Keys.R: this.cpu.keys[0xD] = false; break;
                 
-                case Keys.Q: this.cpu.keys[0x7] = false; break;
-                case Keys.S: this.cpu.keys[0x8] = false; break;
-                case Keys.D: this.cpu.keys[0x9] = false; break;
-                case Keys.G: this.cpu.keys[0xE] = false; break;
+                    case Keys.Q: this.cpu.keys[0x7] = false; break;
+                    case Keys.S: this.cpu.keys[0x8] = false; break;
+                    case Keys.D: this.cpu.keys[0x9] = false; break;
+                    case Keys.F: this.cpu.keys[0xE] = false; break;
                 
-                case Keys.W: this.cpu.keys[0xA] = false; break;
-                case Keys.X: this.cpu.keys[0xB] = false; break;
-                case Keys.C: this.cpu.keys[0xD] = false; break;
-                case Keys.V: this.cpu.keys[0xF] = false; break;
+                    case Keys.W: this.cpu.keys[0xA] = false; break;
+                    case Keys.X: this.cpu.keys[0x0] = false; break;
+                    case Keys.C: this.cpu.keys[0xB] = false; break;
+                    case Keys.V: this.cpu.keys[0xF] = false; break;
+                }
             }
-        }
     }
 }

@@ -24,6 +24,8 @@ namespace chip8Emulator
         public UInt16 pc; // to go throught the array "memory"
         public bool[] keys = new bool[16];
 
+        public bool isWaitingForKeys = false;
+
         public void CPUInitialize()
         {
             UInt16 i = 0;
@@ -75,7 +77,7 @@ namespace chip8Emulator
             jp.masque[10] = 0xF00F; jp.id[10] = 0x8000;          /* 8XY0 */
             jp.masque[11] = 0xF00F; jp.id[11] = 0x8001;          /* 8XY1 */
             jp.masque[12] = 0xF00F; jp.id[12] = 0x8002;          /* 8XY2 */
-            jp.masque[13] = 0xF00F; jp.id[13] = 0x8003;          /* BXY3 */
+            jp.masque[13] = 0xF00F; jp.id[13] = 0x8003;          /* 8XY3 */
             jp.masque[14] = 0xF00F; jp.id[14] = 0x8004;          /* 8XY4 */
             jp.masque[15] = 0xF00F; jp.id[15] = 0x8005;          /* 8XY5 */
             jp.masque[16] = 0xF00F; jp.id[16] = 0x8006;          /* 8XY6 */
@@ -111,8 +113,6 @@ namespace chip8Emulator
                 if (resultat == jp.id[action]) /* On a trouvé l'action à effectuer */
                     break; /* Plus la peine de continuer la boucle car la condition n'est vraie qu'une seule fois*/
             }
-            
-            Console.WriteLine(resultat);
             return action;  //on renvoie l'indice de l'action à effectuer 
         }
     }
