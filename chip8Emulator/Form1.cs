@@ -21,7 +21,16 @@ namespace chip8Emulator
         public static int VITESSECPU = 4;
         public static int FPS = 16;
         public static int SCALE = 8;
+        public static int BASE_HEIGHT = 256;
+        public static int BASE_WIDTH = 512;
+        public static int OFFSET_HEIGHT = 24;
+        public int Scale = SCALE;
+        
+        public string RomName;
+        OpenFileDialog changeRom = new OpenFileDialog();
         cpu cpu = new cpu();
+        private Thread gameLoopThread;
+
         public Form1()
         {
             this.DoubleBuffered = true;
@@ -36,34 +45,11 @@ namespace chip8Emulator
             //screen.InitializePixel();
             this.cpu.CPUInitialize();
             this.cpu.InitializeJump();
-
-
-            Thread gameLoop = new Thread(RunGameLoop)
-            {
-                IsBackground = true
-            };
-            
-            
-            
-            gameLoop.Start();
-
-
-
         }
         //TODO : faire le menu pause
         public void pause()
         {
 
-        }
-        private void Start()
-        {
-            if (LoadGame("7-beep.ch8") == 0)
-            {
-                Console.WriteLine("Failed to load ROM.");
-                return;
-            }
-
-            Task.Run(() => GameLoop());
         }
 
         private void GameLoop()
@@ -87,7 +73,7 @@ namespace chip8Emulator
 
                 int elapsed = (int)stopwatch.ElapsedMilliseconds;
                 int delay = Math.Max(0, frameTime - elapsed);
-                Thread.Sleep(delay);
+                //Thread.Sleep(delay);
             }
         }
 
@@ -134,14 +120,8 @@ namespace chip8Emulator
 
         public void RunGameLoop()
         {
-            const int targetFrameRate = 60;
-            const int frameDelay = 250;
-
-
-                
-
             byte start = 0, compteur = 0;
-            start = LoadGame("7-beep.ch8");
+            start = LoadGame(RomName);
 
             if(start != 1)
             {
@@ -170,7 +150,7 @@ namespace chip8Emulator
                 }
 
                 this.cpu.decompter();
-                Thread.Sleep(16);
+                Thread.Sleep(8);
             }              
         }
 
@@ -189,11 +169,11 @@ namespace chip8Emulator
                 {
                     if (screen.screen[x, y] == 1)
                     {
-                        e.Graphics.FillRectangle(Brushes.White, x * SCALE, y * SCALE, SCALE, SCALE);
+                        e.Graphics.FillRectangle(Brushes.White, x * Scale, y * Scale + OFFSET_HEIGHT, Scale, Scale);
                     }
                     else
                     {
-                        e.Graphics.FillRectangle(Brushes.Black, x * SCALE, y * SCALE, SCALE, SCALE);
+                        e.Graphics.FillRectangle(Brushes.Black, x * Scale, y * Scale + OFFSET_HEIGHT, Scale, Scale);
                     }
                 }
             }
@@ -259,5 +239,70 @@ namespace chip8Emulator
                     case Keys.V: this.cpu.keys[0xF] = false; break;
                 }
             }
+
+        private void changeRomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(changeRom.ShowDialog() == DialogResult.OK)
+            {
+                RomName = changeRom.FileName;
+
+                if (gameLoopThread != null && gameLoopThread.IsAlive)
+                {
+                    isRunning = false;
+                    gameLoopThread.Join(); // Wait for the thread to stop
+                }
+
+                // Reset emulator state here
+                cpu = new cpu(); // Reinitialize your CPU object
+                screen = new PixelGrid(); // Reinitialize your screen object
+                this.cpu.CPUInitialize();
+                this.cpu.InitializeJump();
+                isRunning = true;
+
+
+                gameLoopThread = new Thread(RunGameLoop)
+                {
+                    IsBackground = true
+                };
+                gameLoopThread.Start();
+            }
+
+        }
+
+        private void toolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            Scale = SCALE / 2;
+            this.Size = new Size(BASE_WIDTH/2, (BASE_HEIGHT/2) + OFFSET_HEIGHT);
+        }
+
+        private void x1ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Scale = SCALE;
+            this.Size = new Size(BASE_WIDTH, BASE_HEIGHT);
+        }
+
+        private void x15ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Scale = (int)(SCALE * 1.5);
+            this.Size = new Size((int)(BASE_WIDTH*1.5), (int)(BASE_HEIGHT*1.5)+OFFSET_HEIGHT);
+        }
+
+        private void x2ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Scale = (int)(SCALE * 2);
+            this.Size = new Size((int)(BASE_WIDTH * 2), (int)(BASE_HEIGHT * 2) + OFFSET_HEIGHT);
+        }
+
+        private void x25ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Scale = (int)(SCALE * 2.5);
+            this.Size = new Size((int)(BASE_WIDTH * 2.5), (int)(BASE_HEIGHT * 2.5) + OFFSET_HEIGHT);
+        }
+
+        private void x3ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Scale = (int)(SCALE * 3);
+            this.Size = new Size((int)(BASE_WIDTH * 3), (int)(BASE_HEIGHT * 3) + OFFSET_HEIGHT);
+        }
     }
 }
