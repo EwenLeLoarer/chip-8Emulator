@@ -11,10 +11,5 @@ namespace chip8Emulator
         public const byte nbrOPcode = 35;
         public UInt16[] masque = new UInt16[nbrOPcode];
         public UInt16[] id = new UInt16[nbrOPcode];
-
-        public Jump()
-        {
-
-        }
     }
 }

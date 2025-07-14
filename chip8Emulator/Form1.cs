@@ -24,7 +24,7 @@ namespace chip8Emulator
         public static int BASE_HEIGHT = 256;
         public static int BASE_WIDTH = 512;
         public static int OFFSET_HEIGHT = 24;
-        public int Scale = SCALE;
+        public int ScalePixel = SCALE;
         
         public string RomName;
         OpenFileDialog changeRom = new OpenFileDialog();
@@ -169,11 +169,11 @@ namespace chip8Emulator
                 {
                     if (screen.screen[x, y] == 1)
                     {
-                        e.Graphics.FillRectangle(Brushes.White, x * Scale, y * Scale + OFFSET_HEIGHT, Scale, Scale);
+                        e.Graphics.FillRectangle(Brushes.White, x * ScalePixel, y * ScalePixel + OFFSET_HEIGHT, ScalePixel, ScalePixel);
                     }
                     else
                     {
-                        e.Graphics.FillRectangle(Brushes.Black, x * Scale, y * Scale + OFFSET_HEIGHT, Scale, Scale);
+                        e.Graphics.FillRectangle(Brushes.Black, x * ScalePixel, y * ScalePixel + OFFSET_HEIGHT, ScalePixel, ScalePixel);
                     }
                 }
             }
@@ -269,40 +269,41 @@ namespace chip8Emulator
 
         }
 
+        private void scale(double scaleFactor)
+        {
+            ScalePixel = (int)(SCALE * scaleFactor);
+            this.Size = new Size((int)(BASE_WIDTH * scaleFactor), (int)(BASE_HEIGHT * scaleFactor) + OFFSET_HEIGHT);
+            //screen.ResetScreen();
+            screen.UpdateScreen();
+        }
         private void toolStripMenuItem3_Click(object sender, EventArgs e)
         {
-            Scale = SCALE / 2;
-            this.Size = new Size(BASE_WIDTH/2, (BASE_HEIGHT/2) + OFFSET_HEIGHT);
+            scale(0.5);
         }
 
         private void x1ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Scale = SCALE;
-            this.Size = new Size(BASE_WIDTH, BASE_HEIGHT);
+            scale(1);
         }
 
         private void x15ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Scale = (int)(SCALE * 1.5);
-            this.Size = new Size((int)(BASE_WIDTH*1.5), (int)(BASE_HEIGHT*1.5)+OFFSET_HEIGHT);
+            scale(1.5);
         }
 
         private void x2ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Scale = (int)(SCALE * 2);
-            this.Size = new Size((int)(BASE_WIDTH * 2), (int)(BASE_HEIGHT * 2) + OFFSET_HEIGHT);
+            scale(2);
         }
 
         private void x25ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Scale = (int)(SCALE * 2.5);
-            this.Size = new Size((int)(BASE_WIDTH * 2.5), (int)(BASE_HEIGHT * 2.5) + OFFSET_HEIGHT);
+            scale(2.5);
         }
 
         private void x3ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Scale = (int)(SCALE * 3);
-            this.Size = new Size((int)(BASE_WIDTH * 3), (int)(BASE_HEIGHT * 3) + OFFSET_HEIGHT);
+            scale(3);
         }
     }
 }

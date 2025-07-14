@@ -14,18 +14,19 @@ namespace chip8Emulator
     {
         public const int l = 64; //number of pixel on x axis
         public const int L = 32; // number of pixel y axis
-        public const int DIMPIXEL = 8; // size of a pixel
+        public const int DIMPIXEL = 16; // size of a pixel
         public const int WIDTH = l * DIMPIXEL; // x size of the screen
         public const int HEIGHT = L * DIMPIXEL;// y size of the screen
         public bool NeedToBeUpdated = true;
-        
-        
+
+        public byte[,] screen = new byte[WIDTH, HEIGHT];
+
         public PixelGrid()
         {
 
         }
 
-        public byte[,] screen = new byte[WIDTH, HEIGHT];
+        
 
         public void InitializePixel()
         {
@@ -42,8 +43,6 @@ namespace chip8Emulator
                 }
             }
         }
-
-        //TODO: change all pixel to 0
         public void ResetScreen()
         {
             byte x = 0, y = 0;

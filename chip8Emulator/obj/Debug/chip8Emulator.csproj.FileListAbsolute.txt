@@ -41,3 +41,4 @@ C:\test fichier code\chip8\chip8Emulator\obj\Debug\chip8Emulator.csproj.Generate
 C:\test fichier code\chip8\chip8Emulator\obj\Debug\chip8Emulator.csproj.CoreCompileInputs.cache
 C:\test fichier code\chip8\chip8Emulator\obj\Debug\chip8Emulator.exe
 C:\test fichier code\chip8\chip8Emulator\obj\Debug\chip8Emulator.pdb
+C:\test fichier code\chip8\chip8Emulator\obj\Debug\chip8Emulator.help.resources
