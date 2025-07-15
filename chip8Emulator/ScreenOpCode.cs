@@ -12,22 +12,15 @@ namespace chip8Emulator
 {
     public class PixelGrid
     {
-        public const int l = 64; //number of pixel on x axis
-        public const int L = 32; // number of pixel y axis
-        public const int DIMPIXEL = 16; // size of a pixel
-        public const int WIDTH = l * DIMPIXEL; // x size of the screen
-        public const int HEIGHT = L * DIMPIXEL;// y size of the screen
+        private const int l = 64; //number of pixel on x axis
+        private const int L = 32; // number of pixel y axis
+        private const int DimPixel = 16; // size of a pixel
+        private const int Width = l * DimPixel; // x size of the screen
+        private const int Height = L * DimPixel;// y size of the screen
         public bool NeedToBeUpdated = true;
 
-        public byte[,] screen = new byte[WIDTH, HEIGHT];
-
-        public PixelGrid()
-        {
-
-        }
-
+        public byte[,] Screen = new byte[Width, Height];
         
-
         public void InitializePixel()
         {
             byte x = 0, y = 0;
@@ -37,9 +30,9 @@ namespace chip8Emulator
                 for(y = 0; y < L; y++)
                 {
                     if (x % (y + 1) == 0)
-                        this.screen[x, y] = 0;
+                        this.Screen[x, y] = 0;
                     else
-                        this.screen[x, y] = 1;
+                        this.Screen[x, y] = 1;
                 }
             }
         }
@@ -50,13 +43,11 @@ namespace chip8Emulator
             {
                 for(y = 0; y < L;y++)
                 {
-                    screen[x, y] = 0;
+                    Screen[x, y] = 0;
                 }
             }
 
             this.NeedToBeUpdated = true;
-
-
         }
 
         public void UpdateScreen()
@@ -64,30 +55,29 @@ namespace chip8Emulator
             NeedToBeUpdated = true;
         }
 
-        public void DrawScreen(byte b1, byte b2, byte b3, cpu ScreenCpu)
+        private void DrawScreen(byte b1, byte b2, byte b3, CPU cpu)
         {
             byte x = 0, y = 0, k = 0, codage = 0, j = 0, decalage = 0;
-            ScreenCpu.V[0xF] = 0;
+            cpu.V[0xF] = 0;
             for (k = 0; k < b1; k++)
             {
-                codage = ScreenCpu.memory[ScreenCpu.I + k]; //on récupère le codage de la ligne à dessiner 
+                codage = cpu.Memory[cpu.I + k]; //we get the codage of the line to draw
 
-                y = (byte)((ScreenCpu.V[b2] + k) % L); //on calcule l'ordonnée de la ligne à dessiner, on ne doit pas dépasser L 
+                y = (byte)((cpu.V[b2] + k) % L); //we calculate the y-axis of the line to not go over L
 
                 for (j = 0, decalage = 7; j < 8; j++, decalage--)
                 {
-                    x = (byte)((ScreenCpu.V[b3] + j) % l); //on calcule l'abscisse, on ne doit pas dépasser l 
-                    if (((codage)& (0x1<<decalage))!=0) //on récupère le bit correspondant 
-                    {//si c'est blanc
-                        if (screen[x, y] == 1)
+                    x = (byte)((cpu.V[b3] + j) % l); //we calculate the x-axis of the line to not go over l
+                    if (((codage)& (0x1<<decalage))!=0) //we get the remaining bit
+                    {
+                        if (Screen[x, y] == 1)
                         {
-                            screen[x, y] = 0;
-                            ScreenCpu.V[0xF] = 1;
+                            Screen[x, y] = 0;
+                            cpu.V[0xF] = 1;
                         }
                         else
                         {
-                            screen[x, y] = 1;
-                            //test
+                            Screen[x, y] = 1;
                         }
                     }
                 }
@@ -96,33 +86,13 @@ namespace chip8Emulator
             }
         }
 
-        public void WaitForInputs(byte b3, cpu  ScreenCpu)
+        private void WaitForInputs(byte b3, CPU  cpu)
         {
-            //ScreenCpu.isWaitingForKeys = true;
-            //while (ScreenCpu.isWaitingForKeys)
-            //{
-            //    for (byte i = 0; i < 16; i++)
-            //    {
-            //        if (ScreenCpu.keys[i])
-            //        {
-            //            ScreenCpu.V[b3] = i;
-            //            Console.WriteLine("input : " + ScreenCpu.V[b3]);
-
-            //            ScreenCpu.isWaitingForKeys = false;
-            //            ScreenCpu.pc += 2;
-
-            //        }
-            //    }
-            //}
-            //bool wait = true;
 
 
-
-            //if (wait) ScreenCpu.pc -= 2;
-
-            if (!ScreenCpu.isWaitingForKeys)
+            if (!cpu.IsWaitingForKeys)
             {
-                ScreenCpu.isWaitingForKeys = true;
+                cpu.IsWaitingForKeys = true;
 
             }
             
@@ -131,89 +101,88 @@ namespace chip8Emulator
 
 
 
-        public void InterprateOpCode(UInt16 opcode, cpu cpuObject)
+        public void InterpretOpCode(UInt16 opcode, CPU cpuObject)
         {
             byte b4;
-            b4 = cpuObject.getAction(opcode);
+            b4 = cpuObject.GetAction(opcode);
             byte b3, b2, b1;
 
-            b3 = (byte)((opcode & (0x0F00)) >> 8);  //on prend les 4 bits, b3 représente X 
-            b2 = (byte)((opcode & (0x00F0)) >> 4);  //idem, b2 représente Y 
-            b1 = (byte)((opcode & (0x000F)));     //on prend les 4 bits de poids faible
+            b3 = (byte)((opcode & (0x0F00)) >> 8);  //we take the 4 bits, b3 is x
+            b2 = (byte)((opcode & (0x00F0)) >> 4);  //same, b2 is Y 
+            b1 = (byte)((opcode & (0x000F)));     //we take the 4 bits remaining
 
-            /* 
-                Pour obtenir NNN par exemple, il faut faire (b3<<8) + (b2<<4) + (b1) 
+            //to have NNN we need to do (b3<<8) + (b2<<4) + (b1) 
 
-            */
 
             switch (b4)
             {
-                case 0: //non implementer
+                case 0: //unimplement
                     break;
-                case 1: //00E0 : efface l'ecran
+                case 1: //00E0 : reset the screen
                     this.ResetScreen();
-                    //cpuObject.pc += 2; // Avancer au prochain opcode
                     break;
-                case 2: //00EE : revient du saut
-                     if(cpuObject.nbrJump>0)
+                case 2: //00EE : go back from a jump
+                     if(cpuObject.NbrJump>0)
                     {
-                        cpuObject.nbrJump--;
-                        cpuObject.pc = cpuObject.jump[cpuObject.nbrJump];
+                        cpuObject.NbrJump--;
+                        cpuObject.Pc = cpuObject.Jump[cpuObject.NbrJump];
                     }
                     break;
-                case 3: //1NNN : effectue un saut à l'adresse 1NNN 
+                case 3: //1NNN : do a jump to the address 1NNN 
 
-                    cpuObject.pc = (UInt16)((b3 << 8) + (b2 << 4) + b1); //on prend le nombre NNN (pour le saut) 
-                    cpuObject.pc -= 2; //n'oublions pas le pc+=2 à la fin du bloc switch
+                    cpuObject.Pc = (UInt16)((b3 << 8) + (b2 << 4) + b1); 
+                    cpuObject.Pc -= 2;
                     break;
-                case 4: //2NNN : appelle le sous-programme en NNN, mais on revient ensuite
-                    cpuObject.jump[cpuObject.nbrJump] = cpuObject.pc;
+                case 4: //2NNN : Execute subroutine starting at address NNN
+                    cpuObject.Jump[cpuObject.NbrJump] = cpuObject.Pc;
                     
-                    if(cpuObject.nbrJump<15)
+                    if(cpuObject.NbrJump<15)
                     {
-                        cpuObject.nbrJump++;
+                        cpuObject.NbrJump++;
                     }
-                    cpuObject.pc = (UInt16)((b3 << 8) + (b2 << 4) + b1)   ; //on prend le nombre NNN (pour le saut) 
-                    cpuObject.pc -= 2; //n'oublions pas le pc+=2 à la fin du block switch
+                    cpuObject.Pc = (UInt16)((b3 << 8) + (b2 << 4) + b1)   ;
+                    cpuObject.Pc -= 2; 
 
                     break;
-                case 5: //3XNN saute l'instruction suivante si VX est égal à NN. 
+                case 5: //3NNN: Skip the following instruction if the value of register VX equals NN
                     if (cpuObject.V[b3] == ((b2<<4) + b1))
                     {
-                        cpuObject.pc += 2;
+                        cpuObject.Pc += 2;
                     }
                     break;
-                case 6: //4XNN saute l'instruction suivante si VX et NN ne sont pas égaux.
+                case 6: //4XNN : Skip the following instruction if the value of register VX is not equal to NN
                     if (cpuObject.V[b3] != ((b2 << 4) + b1))
                     {
-                        cpuObject.pc += 2;
+                        cpuObject.Pc += 2;
                     }
                     break;
-                case 7:  //5XY0 saute l'instruction suivante si VX et VY sont égaux. 
+                case 7:  //5XY0 : Skip the following instruction if the value of register VX is equal to the value of register VY
                     if (cpuObject.V[b3] == cpuObject.V[b2])
                     {
-                        cpuObject.pc += 2;
+                        cpuObject.Pc += 2;
                     }
                     break;
-                case 8:  //6XNN définit VX à NN.
+                case 8:  //6XNN : Store number NN in register VX
                     cpuObject.V[b3] = (byte)((b2 << 4) + b1);
                     break;
-                case 9: //7XNN ajoute NN à VX. 
+                case 9: //7XNN : Add the value NN to register VX 
                     cpuObject.V[b3] += (byte)((b2 << 4) + b1);
                     break;
-                case 10: //8XY0 définit VX à la valeur de VY. 
+                case 10: //8XY0 : Store the value of register VY in register VX
                     cpuObject.V[b3] = cpuObject.V[b2];
                     break;
-                case 11: //8XY1 définit VX à VX OR VY.
+                case 11: //8XY1 : Set VX to VX OR VY
                     cpuObject.V[b3] = (byte)(cpuObject.V[b3] | cpuObject.V[b2]);
                     break;
-                case 12: //8XY2 définit VX à VX AND VY.
+                case 12: //8XY2 : Set VX to VX AND VY
                     cpuObject.V[b3] = (byte)(cpuObject.V[b3] & cpuObject.V[b2]);
                     break;
-                case 13:  //8XY3 définit VX à VX XOR VY. 
+                case 13:  //8XY3 : Set VX to VX XOR VY
                     cpuObject.V[b3] = (byte)(cpuObject.V[b3] ^ cpuObject.V[b2]);
                     break;
-                case 14: //8XY4 ajoute VY à VX. VF est mis à 1 quand il y a un dépassement de mémoire (carry), et à 0 quand il n'y en pas. 
+                case 14: //8XY4 : Add the value of register VY to register VX
+                         //Set VF to 01 if a carry occurs
+                         //Set VF to 00 if a carry does not occur
                     if ((cpuObject.V[b3] + cpuObject.V[b2]) > 0xFF)
                     {
                         cpuObject.V[0xF] = 1; //V[15] 
@@ -224,7 +193,9 @@ namespace chip8Emulator
                     }
                     cpuObject.V[b3] += cpuObject.V[b2];
                     break;
-                case 15:  //8XY5 VY est soustraite de VX. VF est mis à 0 quand il y a un emprunt, et à 1 quand il n'y a en pas. 
+                case 15:  //8XY5 : Subtract the value of register VY from register VX
+                          //Set VF to 00 if a borrow occurs
+                          //Set VF to 01 if a borrow does not occur
                     if (cpuObject.V[b3] < cpuObject.V[b2])
                     {
                         cpuObject.V[0xF] = 0;
@@ -235,14 +206,18 @@ namespace chip8Emulator
                     }
                     cpuObject.V[b3] -= cpuObject.V[b2];
                     break;
-                case 16:  //8XY6 décale (shift) VX à droite de 1 bit. VF est fixé à la valeur du bit de poids faible de VX avant le décalage. 
+                case 16:  //8XY6: Store the value of register VY shifted right one bit in register VX
+                          //Set register VF to the least significant bit prior to the shift
+                          //VY is unchanged
                     cpuObject.V[0xF] = (byte)(cpuObject.V[b3] & (0x01));
                     cpuObject.V[b3] = (byte)(cpuObject.V[b3] >> 1);
                     break;
-                case 17: //8XY7 VX = VY - VX. VF est mis à 0 quand il y a un emprunt et à 1 quand il n'y en a pas. 
+                case 17: //8XY7 : Set register VX to the value of VY minus VX
+                         //Set VF to 00 if a borrow occurs
+                         //Set VF to 01 if a borrow does not occur
                     if ((cpuObject.V[b2] < cpuObject.V[b3]))
                     {
-                        cpuObject.V[0xF] = 0;//this.cpu.V[15]
+                        cpuObject.V[0xF] = 0;
                     }
                     else
                     {
@@ -250,59 +225,58 @@ namespace chip8Emulator
                     }
                     cpuObject.V[b3] = (byte)(cpuObject.V[b2] - cpuObject.V[b3]);
                     break;
-                case 18: //8XYE décale (shift) VX à gauche de 1 bit. VF est fixé à la valeur du bit de poids fort de VX avant le décalage. 
+                case 18: //8XYE : Store the value of register VY shifted left one bit in register VX¹
+                         //Set register VF to the most significant bit prior to the shift
+                         //VY is unchanged
                     cpuObject.V[0xF] = (byte)(cpuObject.V[b3] & (0x01));
                     cpuObject.V[b3] = (byte)(cpuObject.V[b3] << 1);
                     break;
-                case 19:  //9XY0 saute l'instruction suivante si VX et VY ne sont pas égaux. 
+                case 19:  //9XY0 : Skip the following instruction if the value of register VX is not equal to the value of register VY
                     if (cpuObject.V[b3] != cpuObject.V[b2])
                     {
-                        cpuObject.pc += 2;
+                        cpuObject.Pc += 2;
                     }
                     break;
-                case 20: //ANNN affecte NNN à I. 
+                case 20: //ANNN : Store memory address NNN in register I
                     cpuObject.I = (UInt16)((b3 << 8) + (b2 << 4) + b1);
                     break;
-                case 21:  //BNNN passe à l'adresse NNN + V0. 
-                    cpuObject.pc = (UInt16)((b3 << 8) + (b2 << 4) + b1 + cpuObject.V[0]);
+                case 21:  //BNNN : Jump to address NNN + V0
+                    cpuObject.Pc = (UInt16)((b3 << 8) + (b2 << 4) + b1 + cpuObject.V[0]);
                     break;
-                case 22:  //CXNN définit VX à un nombre aléatoire inférieur à NN.
+                case 22:  //CXNN : Set VX to a random number with a mask of NN
                     Random rand = new Random();
                     cpuObject.V[b3] =  (byte)rand.Next(0,((b2 << 4) + b1 + 1));
                     break;
-                case 23: //DXYN dessine un sprite aux coordonnées (VX, VY). 
-
+                case 23: //DXYN : Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
+                         //Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
                     DrawScreen(b1, b2, b3, cpuObject);
                     break;
-                case 24: //EX9E saute l'instruction suivante si la clé stockée dans VX est pressée.
-                    Console.WriteLine("Opcode: EX9E, "+  cpuObject.V[ b3] + " --- " + cpuObject.keys[cpuObject.V[b3]] + "------" + (cpuObject.keys[cpuObject.V[b3]] == true));
-                    if (cpuObject.keys[cpuObject.V[b3]])
+                case 24: //EX9E : Skip the following instruction if the key corresponding to the hex value currently stored in register VX is pressed
+                    if (cpuObject.Keys[cpuObject.V[b3]])
                     {
-                        cpuObject.pc += 2;
+                        cpuObject.Pc += 2;
                     }
-                    
+                    break;
+                case 25:  //EXA1 : Skip the following instruction if the key corresponding to the hex value currently stored in register VX is not pressed
 
-                    break;
-                case 25:  //EXA1 saute l'instruction suivante si la clé stockée dans VX n'est pas pressée. 
-                    Console.WriteLine("Opcode: EXA1, " + cpuObject.V[b3] + " --- " + cpuObject.keys[cpuObject.V[b3]]);
-                    if (!cpuObject.keys[cpuObject.V[b3]])
+                    if (!cpuObject.Keys[cpuObject.V[b3]])
                     {
-                        cpuObject.pc += 2;
+                        cpuObject.Pc += 2;
                     }
                     break;
-                case 26: //FX07 définit VX à la valeur de la temporisation. 
-                    cpuObject.V[b3] = (byte)cpuObject.counterGame;
+                case 26: //FX07 : Store the current value of the delay timer in register VX
+                    cpuObject.V[b3] = (byte)cpuObject.CounterGame;
                     break;
-                case 27: //FX0A attend l'appui sur une touche et la stocke ensuite dans VX. 
+                case 27: //FX0A : Wait for a keypress and store the result in register VX
                     WaitForInputs(b3, cpuObject);
                     break;
-                case 28:  //FX15 définit la temporisation à VX. 
-                    cpuObject.counterGame = cpuObject.V[b3];
+                case 28:  //FX15 : Set the delay timer to the value of register VX
+                    cpuObject.CounterGame = cpuObject.V[b3];
                     break;
-                case 29: //FX18 définit la minuterie sonore à VX. 
-                    cpuObject.counterSound = cpuObject.V[b3];
+                case 29: //FX18 : Set the sound timer to the value of register VX
+                    cpuObject.CounterSound = cpuObject.V[b3];
                     break;
-                case 30: //FX1E ajoute à VX I. VF est mis à 1 quand il y a overflow (I+VX>0xFFF), et à 0 si tel n'est pas le cas.
+                case 30: //FX1E : Add the value stored in register VX to register I
                     if ((cpuObject.I + cpuObject.V[b3]) > 0xFFF)
                     {
                         cpuObject.V[0xF] = 1;
@@ -313,33 +287,33 @@ namespace chip8Emulator
                     }
                     cpuObject.I += cpuObject.V[b3];
                     break;
-                case 31: //FX29 définit I à l'emplacement du caractère stocké dans VX. Les caractères 0-F (en hexadécimal) sont représentés par une police 4x5. 
+                case 31: //FX29 : Set I to the memory address of the sprite data corresponding to the hexadecimal digit stored in register VX
                     cpuObject.I = (UInt16)(cpuObject.V[b3] * 5);
                     break;
-                case 32: //FX33 stocke dans la mémoire le code décimal représentant VX (dans I, I+1, I+2). 
-                    cpuObject.memory[cpuObject.I] = (byte)((cpuObject.V[b3] - cpuObject.V[b3] % 100) / 100); //stocke les centaines 
-                    cpuObject.memory[cpuObject.I + 1] = (byte)(((cpuObject.V[b3] - cpuObject.V[b3] % 10) / 10) % 10);//les dizaines 
-                    cpuObject.memory[cpuObject.I + 2] = (byte)(cpuObject.V[b3] - cpuObject.memory[cpuObject.I] * 100 - cpuObject.memory[cpuObject.I + 1] * 10);//les unités
+                case 32: //FX33 : Store the binary-coded decimal equivalent of the value stored in register VX at addresses I, I + 1, and I + 2
+                    cpuObject.Memory[cpuObject.I] = (byte)((cpuObject.V[b3] - cpuObject.V[b3] % 100) / 100); //the 100
+                    cpuObject.Memory[cpuObject.I + 1] = (byte)(((cpuObject.V[b3] - cpuObject.V[b3] % 10) / 10) % 10);//the 10 
+                    cpuObject.Memory[cpuObject.I + 2] = (byte)(cpuObject.V[b3] - cpuObject.Memory[cpuObject.I] * 100 - cpuObject.Memory[cpuObject.I + 1] * 10);//the 1
                     break;
-                case 33: //FX55 stocke V0 à VX en mémoire à partir de l'adresse I.
+                case 33: //FX55 : Store the values of registers V0 to VX inclusive in memory starting at address I
+                         //I is set to I + X + 1 after operation
                     for (byte i = 0; i <= b3; i++)
                     {
-                        cpuObject.memory[cpuObject.I + i] = cpuObject.V[i];
+                        cpuObject.Memory[cpuObject.I + i] = cpuObject.V[i];
                     }
                     break;
-                case 34: //FX65 remplit V0 à VX avec les valeurs de la mémoire à partir de l'adresse I. 
-
-
+                case 34: //FX65 : Fill registers V0 to VX inclusive with the values stored in memory starting at address I
+                         //I is set to I + X + 1 after operation
                     for (byte i = 0; i <= b3; i++)
                     {
-                        cpuObject.V[i] = cpuObject.memory[cpuObject.I + i];
+                        cpuObject.V[i] = cpuObject.Memory[cpuObject.I + i];
                     }
                     break;
                 default:
                     break;
             }
-            if(!cpuObject.isWaitingForKeys)
-                cpuObject.pc += 2; //on passe au prochain opcode
+            if(!cpuObject.IsWaitingForKeys)
+                cpuObject.Pc += 2; //we go to the next opcode
         }
     }
 }

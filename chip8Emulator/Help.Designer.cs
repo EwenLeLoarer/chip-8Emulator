@@ -1,6 +1,6 @@
 ﻿namespace chip8Emulator
 {
-    partial class help
+    partial class Help
     {
         /// <summary>
         /// Required designer variable.

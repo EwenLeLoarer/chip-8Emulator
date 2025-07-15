@@ -12,9 +12,9 @@ using Label = System.Windows.Forms.Label;
 
 namespace chip8Emulator
 {
-    public partial class help : Form
+    public partial class Help : Form
     {
-        public help()
+        public Help()
         {
             InitializeComponent();
         }

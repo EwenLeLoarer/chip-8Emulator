@@ -16,20 +16,21 @@ namespace chip8Emulator
 {
     public partial class Form1 : Form
     {
-        PixelGrid screen = new PixelGrid();
-        public bool isRunning = true;
-        public static int VITESSECPU = 4;
+        private PixelGrid _screen = new PixelGrid();
+        private bool _isRunning = true;
+        private static int _cpuSpeed = 4;
         public static int FPS = 16;
-        public static int SCALE = 8;
-        public static int BASE_HEIGHT = 256;
-        public static int BASE_WIDTH = 512;
-        public static int OFFSET_HEIGHT = 24;
-        public int ScalePixel = SCALE;
+        private static int _scale = 8;
+        private static int _baseHeight = 256;
+        private static int _baseWidth = 512;
+        private static int _offsetHeight = 24;
+        private int _scalePixel = _scale;
         
-        public string RomName;
-        OpenFileDialog changeRom = new OpenFileDialog();
-        cpu cpu = new cpu();
-        private Thread gameLoopThread;
+        private string _romName;
+        
+        private OpenFileDialog _changeRom = new OpenFileDialog();
+        CPU _cpu = new CPU();
+        private Thread _gameLoopThread;
 
         public Form1()
         {
@@ -40,16 +41,9 @@ namespace chip8Emulator
             this.KeyDown += Form1_KeyDown;
             this.KeyUp += Form1_KeyUp;
             this.KeyPreview = true; 
-            
 
-            //screen.InitializePixel();
-            this.cpu.CPUInitialize();
-            this.cpu.InitializeJump();
-        }
-        //TODO : faire le menu pause
-        public void pause()
-        {
-
+            this._cpu.CpuInitialize();
+            this._cpu.InitializeJump();
         }
 
         private void GameLoop()
@@ -59,97 +53,96 @@ namespace chip8Emulator
 
             var stopwatch = new Stopwatch();
 
-            while (isRunning)
+            while (_isRunning)
             {
                 stopwatch.Restart();
                 ExecuteCpuCycles();
-                cpu.decompter();
+                _cpu.Counter();
 
-                if (screen.NeedToBeUpdated)
+                if (_screen.NeedToBeUpdated)
                 {
-                    screen.NeedToBeUpdated = false;
+                    _screen.NeedToBeUpdated = false;
                     BeginInvoke((MethodInvoker)(() => Invalidate()));
                 }
 
                 int elapsed = (int)stopwatch.ElapsedMilliseconds;
                 int delay = Math.Max(0, frameTime - elapsed);
-                //Thread.Sleep(delay);
             }
         }
 
         private void ExecuteCpuCycles()
         {
-            for (int i = 0; i < VITESSECPU; i++)
+            for (int i = 0; i < _cpuSpeed; i++)
             {
 
-                // Si opcode Fx0A, gestion d'attente clavier déjà intégrée dans InterprateOpCode()
-                if (cpu.isWaitingForKeys)
+                // if the opcode fx0A is running, we wait an input before continue
+                if (_cpu.IsWaitingForKeys)
                     break;
 
-                ushort opcode = cpu.getOpCode();
-                screen.InterprateOpCode(opcode, cpu);
+                ushort opcode = _cpu.GetOpCode();
+                _screen.InterpretOpCode(opcode, _cpu);
 
             }
         }
 
-        public byte LoadGame(string nomJeu)
+        private byte LoadGame(string romName)
         {
             try
             {
-                // Lire le fichier ROM en binaire
-                byte[] contenu = File.ReadAllBytes(nomJeu);
+                // read the file's binary
+                byte[] content = File.ReadAllBytes(romName);
 
-                // Vérifie que le fichier ne déborde pas la mémoire disponible
-                if (contenu.Length > this.cpu.memory.Length - 512)
+                // check if the file is not too big
+                if (content.Length > this._cpu.Memory.Length - 512)
                 {
-                    Console.Error.WriteLine("Fichier trop grand pour la mémoire.");
+                    Console.Error.WriteLine("File too big for memory.");
                     return 0;
                 }
 
-                // Copie dans la mémoire à partir de l'adresse de départ (ex: 0x200)
-                Array.Copy(contenu, 0, this.cpu.memory, 512, contenu.Length);
+                // copy the array at the start address 0x200
+                Array.Copy(content, 0, this._cpu.Memory, 512, content.Length);
 
                 return 1;
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"Erreur lors du chargement du jeu : {e.Message}");
+                Console.Error.WriteLine($"Error loading the game : {e.Message}");
                 return 0;
             }
         }
 
         public void RunGameLoop()
         {
-            byte start = 0, compteur = 0;
-            start = LoadGame(RomName);
+            byte start = 0, counter = 0;
+            start = LoadGame(_romName);
 
             if(start != 1)
             {
                 Console.WriteLine("error launching the game :(");
                 return;
             }
-            while (isRunning)
+            while (_isRunning)
             {
-                for (compteur = 0; compteur < VITESSECPU; compteur++)
+                for (counter = 0; counter < _cpuSpeed; counter++)
                 {
-                    if (!this.cpu.isWaitingForKeys)
+                    if (!this._cpu.IsWaitingForKeys)
                     {
-                        this.screen.InterprateOpCode(this.cpu.getOpCode(), this.cpu);
-                        if (this.screen.NeedToBeUpdated)
+                        this._screen.InterpretOpCode(this._cpu.GetOpCode(), this._cpu);
+                        if (this._screen.NeedToBeUpdated)
                         {
                             this.Invalidate();
-                            this.screen.NeedToBeUpdated = false;
+                            this._screen.NeedToBeUpdated = false;
                         }
                     }
 
                 }
 
-                while (cpu.counterSound != 0)
+                while (_cpu.CounterSound != 0)
                 {
                     Console.Beep();
                 }
 
-                this.cpu.decompter();
+                this._cpu.Counter();
                 Thread.Sleep(8);
             }              
         }
@@ -167,13 +160,13 @@ namespace chip8Emulator
             {
                 for (int x = 0; x < 64; x++)
                 {
-                    if (screen.screen[x, y] == 1)
+                    if (_screen.Screen[x, y] == 1)
                     {
-                        e.Graphics.FillRectangle(Brushes.White, x * ScalePixel, y * ScalePixel + OFFSET_HEIGHT, ScalePixel, ScalePixel);
+                        e.Graphics.FillRectangle(Brushes.White, x * _scalePixel, y * _scalePixel + _offsetHeight, _scalePixel, _scalePixel);
                     }
                     else
                     {
-                        e.Graphics.FillRectangle(Brushes.Black, x * ScalePixel, y * ScalePixel + OFFSET_HEIGHT, ScalePixel, ScalePixel);
+                        e.Graphics.FillRectangle(Brushes.Black, x * _scalePixel, y * _scalePixel + _offsetHeight, _scalePixel, _scalePixel);
                     }
                 }
             }
@@ -184,33 +177,33 @@ namespace chip8Emulator
             {
                 switch (e.KeyCode)
                 {
-                    case Keys.D1: this.cpu.keys[0x1] = true; break;
-                    case Keys.D2: this.cpu.keys[0x2] = true; break;
-                    case Keys.D3: this.cpu.keys[0x3] = true; break;
-                    case Keys.D4: this.cpu.keys[0xC] = true; break;
+                    case Keys.D1: this._cpu.Keys[0x1] = true; break;
+                    case Keys.D2: this._cpu.Keys[0x2] = true; break;
+                    case Keys.D3: this._cpu.Keys[0x3] = true; break;
+                    case Keys.D4: this._cpu.Keys[0xC] = true; break;
                 
-                    case Keys.A: this.cpu.keys[0x4] = true; break;
-                    case Keys.Z: this.cpu.keys[0x5] = true; break;
-                    case Keys.E: this.cpu.keys[0x6] = true; break;
-                    case Keys.R: this.cpu.keys[0xD] = true; break;
+                    case Keys.A: this._cpu.Keys[0x4] = true; break;
+                    case Keys.Z: this._cpu.Keys[0x5] = true; break;
+                    case Keys.E: this._cpu.Keys[0x6] = true; break;
+                    case Keys.R: this._cpu.Keys[0xD] = true; break;
                 
-                    case Keys.Q: this.cpu.keys[0x7] = true; break;
-                    case Keys.S: this.cpu.keys[0x8] = true; break;
-                    case Keys.D: this.cpu.keys[0x9] = true; break;
-                    case Keys.F: this.cpu.keys[0xE] = true; break;
+                    case Keys.Q: this._cpu.Keys[0x7] = true; break;
+                    case Keys.S: this._cpu.Keys[0x8] = true; break;
+                    case Keys.D: this._cpu.Keys[0x9] = true; break;
+                    case Keys.F: this._cpu.Keys[0xE] = true; break;
                 
-                    case Keys.W: this.cpu.keys[0xA] = true; break;
-                    case Keys.X: this.cpu.keys[0x0] = true; break;
-                    case Keys.C: this.cpu.keys[0xB] = true; break;
-                    case Keys.V: this.cpu.keys[0xF] = true; break;
+                    case Keys.W: this._cpu.Keys[0xA] = true; break;
+                    case Keys.X: this._cpu.Keys[0x0] = true; break;
+                    case Keys.C: this._cpu.Keys[0xB] = true; break;
+                    case Keys.V: this._cpu.Keys[0xF] = true; break;
                 
                     default: break;
                 }
 
-                if(this.cpu.isWaitingForKeys)
+                if(this._cpu.IsWaitingForKeys)
                 {
-                    this.cpu.isWaitingForKeys = false;
-                    this.cpu.pc += 2;
+                    this._cpu.IsWaitingForKeys = false;
+                    this._cpu.Pc += 2;
                 }
             }
         
@@ -218,92 +211,97 @@ namespace chip8Emulator
             {
                 switch (e.KeyCode)
                 {
-                    case Keys.D1: this.cpu.keys[0x1] = false; break;
-                    case Keys.D2: this.cpu.keys[0x2] = false; break;
-                    case Keys.D3: this.cpu.keys[0x3] = false; break;
-                    case Keys.D4: this.cpu.keys[0xC] = false; break;
+                    case Keys.D1: this._cpu.Keys[0x1] = false; break;
+                    case Keys.D2: this._cpu.Keys[0x2] = false; break;
+                    case Keys.D3: this._cpu.Keys[0x3] = false; break;
+                    case Keys.D4: this._cpu.Keys[0xC] = false; break;
                 
-                    case Keys.A: this.cpu.keys[0x4] = false; break;
-                    case Keys.Z: this.cpu.keys[0x5] = false; break;
-                    case Keys.E: this.cpu.keys[0x6] = false; break;
-                    case Keys.R: this.cpu.keys[0xD] = false; break;
+                    case Keys.A: this._cpu.Keys[0x4] = false; break;
+                    case Keys.Z: this._cpu.Keys[0x5] = false; break;
+                    case Keys.E: this._cpu.Keys[0x6] = false; break;
+                    case Keys.R: this._cpu.Keys[0xD] = false; break;
                 
-                    case Keys.Q: this.cpu.keys[0x7] = false; break;
-                    case Keys.S: this.cpu.keys[0x8] = false; break;
-                    case Keys.D: this.cpu.keys[0x9] = false; break;
-                    case Keys.F: this.cpu.keys[0xE] = false; break;
+                    case Keys.Q: this._cpu.Keys[0x7] = false; break;
+                    case Keys.S: this._cpu.Keys[0x8] = false; break;
+                    case Keys.D: this._cpu.Keys[0x9] = false; break;
+                    case Keys.F: this._cpu.Keys[0xE] = false; break;
                 
-                    case Keys.W: this.cpu.keys[0xA] = false; break;
-                    case Keys.X: this.cpu.keys[0x0] = false; break;
-                    case Keys.C: this.cpu.keys[0xB] = false; break;
-                    case Keys.V: this.cpu.keys[0xF] = false; break;
+                    case Keys.W: this._cpu.Keys[0xA] = false; break;
+                    case Keys.X: this._cpu.Keys[0x0] = false; break;
+                    case Keys.C: this._cpu.Keys[0xB] = false; break;
+                    case Keys.V: this._cpu.Keys[0xF] = false; break;
                 }
             }
 
         private void changeRomToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(changeRom.ShowDialog() == DialogResult.OK)
+            if(_changeRom.ShowDialog() == DialogResult.OK)
             {
-                RomName = changeRom.FileName;
+                _romName = _changeRom.FileName;
 
-                if (gameLoopThread != null && gameLoopThread.IsAlive)
+                if (_gameLoopThread != null && _gameLoopThread.IsAlive)
                 {
-                    isRunning = false;
-                    gameLoopThread.Join(); // Wait for the thread to stop
+                    _isRunning = false;
+                    _gameLoopThread.Join(); // Wait for the thread to stop
                 }
 
                 // Reset emulator state here
-                cpu = new cpu(); // Reinitialize your CPU object
-                screen = new PixelGrid(); // Reinitialize your screen object
-                this.cpu.CPUInitialize();
-                this.cpu.InitializeJump();
-                isRunning = true;
+                _cpu = new CPU(); // Reinitialize your CPU object
+                _screen = new PixelGrid(); // Reinitialize your screen object
+                this._cpu.CpuInitialize();
+                this._cpu.InitializeJump();
+                _isRunning = true;
 
 
-                gameLoopThread = new Thread(RunGameLoop)
+                _gameLoopThread = new Thread(RunGameLoop)
                 {
                     IsBackground = true
                 };
-                gameLoopThread.Start();
+                _gameLoopThread.Start();
             }
 
         }
 
-        private void scale(double scaleFactor)
+        private void Scale(double scaleFactor)
         {
-            ScalePixel = (int)(SCALE * scaleFactor);
-            this.Size = new Size((int)(BASE_WIDTH * scaleFactor), (int)(BASE_HEIGHT * scaleFactor) + OFFSET_HEIGHT);
-            //screen.ResetScreen();
-            screen.UpdateScreen();
+            _scalePixel = (int)(_scale * scaleFactor);
+            this.Size = new Size((int)(_baseWidth * scaleFactor), (int)(_baseHeight * scaleFactor) + _offsetHeight);
+            _screen.UpdateScreen();
         }
         private void toolStripMenuItem3_Click(object sender, EventArgs e)
         {
-            scale(0.5);
+            Scale(0.5);
         }
 
         private void x1ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            scale(1);
+            Scale(1);
         }
 
         private void x15ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            scale(1.5);
+            Scale(1.5);
         }
 
         private void x2ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            scale(2);
+            Scale(2);
         }
 
         private void x25ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            scale(2.5);
+            Scale(2.5);
         }
 
         private void x3ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            scale(3);
+            Scale(3);
+        }
+
+        private void helpToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            Help help = new Help();
+            help.Show();
         }
     }
 }

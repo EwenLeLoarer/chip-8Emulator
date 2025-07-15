@@ -8,8 +8,8 @@ namespace chip8Emulator
 {
     public class Jump
     {
-        public const byte nbrOPcode = 35;
-        public UInt16[] masque = new UInt16[nbrOPcode];
-        public UInt16[] id = new UInt16[nbrOPcode];
+        public const byte NbrOPcode = 35;
+        public UInt16[] Masque = new UInt16[NbrOPcode];
+        public UInt16[] Id = new UInt16[NbrOPcode];
     }
 }
